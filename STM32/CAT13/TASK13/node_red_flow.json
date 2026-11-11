@@ -1,0 +1,53 @@
+[
+  {
+    "id": "cat13-tab",
+    "type": "tab",
+    "label": "BME280 HTTP Analytics (CAT13)",
+    "disabled": false
+  },
+  {
+    "id": "inj-bme",
+    "type": "inject",
+    "z": "cat13-tab",
+    "name": "Poll BME280 Node (2s)",
+    "repeat": "2",
+    "once": true,
+    "x": 170,
+    "y": 140,
+    "wires": [["http-bme"]]
+  },
+  {
+    "id": "http-bme",
+    "type": "http request",
+    "z": "cat13-tab",
+    "name": "GET BME280 JSON",
+    "method": "GET",
+    "ret": "obj",
+    "url": "http://192.168.1.105/",
+    "x": 420,
+    "y": 140,
+    "wires": [["fn-stats", "dbg-bme"]]
+  },
+  {
+    "id": "fn-stats",
+    "type": "function",
+    "z": "cat13-tab",
+    "name": "Min / Max / Avg Analytics",
+    "func": "let s = context.get('stats') || {n:0, tMin:999, tMax:-999, tSum:0, hMin:999, hMax:-999, hSum:0, pMin:9999, pMax:0, pSum:0};\nconst d = msg.payload;\ns.n++;\ns.tMin = Math.min(s.tMin, d.temperature); s.tMax = Math.max(s.tMax, d.temperature); s.tSum += d.temperature;\ns.hMin = Math.min(s.hMin, d.humidity); s.hMax = Math.max(s.hMax, d.humidity); s.hSum += d.humidity;\ns.pMin = Math.min(s.pMin, d.pressure); s.pMax = Math.max(s.pMax, d.pressure); s.pSum += d.pressure;\ncontext.set('stats', s);\nmsg.payload = {\n  temperature: {min: s.tMin, max: s.tMax, avg: +(s.tSum/s.n).toFixed(2)},\n  humidity: {min: s.hMin, max: s.hMax, avg: +(s.hSum/s.n).toFixed(2)},\n  pressure: {min: s.pMin, max: s.pMax, avg: +(s.pSum/s.n).toFixed(2)}\n};\nreturn msg;",
+    "outputs": 1,
+    "x": 680,
+    "y": 140,
+    "wires": [["dbg-bme"]]
+  },
+  {
+    "id": "dbg-bme",
+    "type": "debug",
+    "z": "cat13-tab",
+    "name": "Analytics Output",
+    "active": true,
+    "complete": "payload",
+    "x": 920,
+    "y": 140,
+    "wires": []
+  }
+]

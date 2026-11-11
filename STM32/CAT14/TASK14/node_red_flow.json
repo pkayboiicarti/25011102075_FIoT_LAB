@@ -1,0 +1,40 @@
+[
+  {
+    "id": "cat14-tab",
+    "type": "tab",
+    "label": "BME280 MQTT Analytics (CAT14)",
+    "disabled": false
+  },
+  {
+    "id": "mqtt-in",
+    "type": "mqtt in",
+    "z": "cat14-tab",
+    "name": "STM32 BME280 Topic",
+    "topic": "stm32/test/data",
+    "qos": "0",
+    "datatype": "json",
+    "broker": "emqx-broker",
+    "x": 200,
+    "y": 140,
+    "wires": [["dbg-mqtt"]]
+  },
+  {
+    "id": "dbg-mqtt",
+    "type": "debug",
+    "z": "cat14-tab",
+    "name": "BME280 JSON Payload",
+    "active": true,
+    "complete": "payload",
+    "x": 490,
+    "y": 140,
+    "wires": []
+  },
+  {
+    "id": "emqx-broker",
+    "type": "mqtt-broker",
+    "name": "EMQX Public Broker",
+    "broker": "broker.emqx.io",
+    "port": "1883",
+    "cleansession": true
+  }
+]
