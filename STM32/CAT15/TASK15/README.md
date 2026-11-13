@@ -126,7 +126,11 @@ The Node-RED flow is provided in [node_red_flow.json](node_red_flow.json).
 
 ---
 
-## 7. Inference
+## 9.Node-Red Dashboard
+
+
+
+## 8. Inference
 
 1. **Precision Sensing**: The Bosch BME280 sensor successfully reads barometric pressure, ambient temperature, and relative humidity over the I2C bus at 100 kHz.
 2. **Reliable Wireless IoT Pipeline**: The STM32 Nucleo-F401RE commands the ESP8266 module via USART1 AT commands, maintaining continuous MQTT publishing to `broker.emqx.io` with zero data loss.
