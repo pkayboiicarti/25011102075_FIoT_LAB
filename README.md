@@ -2,13 +2,13 @@
 
 ## 1. About
 
-This repository contains all laboratory submissions for **25CS2741 — Foundations of Internet of Things + Lab** organized in strict CAT order across **8051 (AT89S52)** bare-metal experiments (`CAT2`–`CAT7`), and **STM32 (Blue Pill STM32F103C8T6 & Nucleo-F401RE)** HAL/IoT experiments (`CAT8`–`CAT14`).
+This repository contains all laboratory submissions for **25CS2741 — Foundations of Internet of Things + Lab** organized in strict CAT order across **8051 (AT89S52)** bare-metal experiments (`CAT2`–`CAT7`), and **STM32 (Blue Pill STM32F103C8T6 & Nucleo-F401RE)** HAL/IoT experiments (`CAT8`–`CAT15`).
 
 Every task and subtask folder includes its own `README.md` (with Experiment Details, Hardware Setup, Embedded Circuit Diagram `circuit.png`, Pseudocode/Code Base, and Inference) alongside all required Keil µVision / STM32CubeMX source and project files.
 
 ---
 
-## 2. Complete CAT Index (CAT2 – CAT14)
+## 2. Complete CAT Index (CAT2 – CAT15)
 
 | CAT No. | Platform | Experiment Title | Subtasks / Folders |
 |---|---|---|---|
@@ -25,6 +25,7 @@ Every task and subtask folder includes its own `README.md` (with Experiment Deta
 | **CAT12** | STM32 (`STM32F401RE`) | STM32F401RE Cortex-M4: GPIO and User Input Programming | [TASK12A (LED Bring-Up)](STM32/CAT12/TASK12A/README.md) · [TASK12B (Switch Memory)](STM32/CAT12/TASK12B/README.md) · [TASK12C (Short/Long Press)](STM32/CAT12/TASK12C/README.md) |
 | **CAT13** | STM32 (`STM32F401RE`) | Sensor Interfacing (BME280) — STM32 (Debug) — ESP8266 (Wi-Fi) HTTP — Node Analytics | [TASK13](STM32/CAT13/TASK13/README.md) |
 | **CAT14** | STM32 (`STM32F401RE`) | Sensor Interfacing (BME280) — (MQTT) — Node Analytics | [TASK14](STM32/CAT14/TASK14/README.md) |
+| **CAT15** | STM32 (`STM32F401RE`) | Real-Time BME280 Environmental Sensing, Multi-Variable Climate/Altitude Prediction & OpenWeatherMap API Integration | [TASK15](STM32/CAT15/TASK15/README.md) |
 
 ---
 
@@ -63,7 +64,8 @@ Every task and subtask folder includes its own `README.md` (with Experiment Deta
     ├── CAT11/ (TASK11A, TASK11B)
     ├── CAT12/ (TASK12A, TASK12B, TASK12C)
     ├── CAT13/ (TASK13)
-    └── CAT14/ (TASK14)
+    ├── CAT14/ (TASK14)
+    └── CAT15/ (TASK15)
 ```
 
 ---
