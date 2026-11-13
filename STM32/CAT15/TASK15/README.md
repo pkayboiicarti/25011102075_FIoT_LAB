@@ -128,13 +128,6 @@ The Node-RED flow is provided in [node_red_flow.json](node_red_flow.json).
 
 ## 7. Node-Red Dashboard
 
-<img width="1363" height="571" alt="image" src="https://github.com/user-attachments/assets/9e9981b8-ae2d-4e7e-9469-9f0b00294595" />
-
-<img width="1349" height="604" alt="image" src="https://github.com/user-attachments/assets/245aa843-37da-4b0f-80b0-f55edfb733de" />
-
-<img width="1332" height="325" alt="image" src="https://github.com/user-attachments/assets/efada3f0-e051-4c10-842a-245c7957c56a" />
-
-
 
 ## 8. Inference
 
