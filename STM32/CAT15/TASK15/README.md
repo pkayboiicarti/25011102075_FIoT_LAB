@@ -126,7 +126,7 @@ The Node-RED flow is provided in [node_red_flow.json](node_red_flow.json).
 
 ---
 
-## 9.Node-Red Dashboard
+## 7. Node-Red Dashboard
 
 
 
