@@ -1,88 +1,133 @@
-# EXPERIMENT DETAILS
+# CAT15 / TASK15 — Real-Time BME280 Environmental Sensing, Multi-Variable Climate/Altitude Prediction & Node-RED Dashboard
 
-**EXP:** CONTINUOUS ASSESSMENT 15 (CAT15)
-
-**DATE:** 14/11/2026
-
-**NAME OF EXP:** Real-Time BME280 Environmental Sensing, Multi-Variable Climate/Altitude Prediction & OpenWeatherMap API Integration
-
-**HARDWARE SETUP / PLATFORM:** STM32 Nucleo-F401RE (Cortex-M4 @ 84 MHz) + Bosch BME280 (I2C1) + ESP8266/Wemos D1 Mini (USART1) + EMQX MQTT Broker + OpenWeatherMap REST API + Node-RED Dashboard
-
----
-
-## TASK 15 : Real-Time Environmental Sensing, Barometric Altitude Prediction & OpenWeatherMap Cloud Sync
-
-### 1. Hardware Setup & Circuit Diagram
-
-- **Microcontroller:** STM32 Nucleo-F401RE (`STM32F401RET6`, ARM Cortex-M4 @ 84 MHz)
-- **Sensor:** Bosch BME280 Combined Temperature, Pressure & Relative Humidity Sensor on `I2C1` (`PB8 = SCL`, `PB9 = SDA`, auto-detected at `0x76` or `0x77`, 3.3V supply)
-- **Wi-Fi & MQTT Transport:** ESP8266 / Wemos D1 Mini on `USART1` (`PA9 = TX`, `PA10 = RX`), joined to local Wi-Fi, publishing telemetry to public broker `broker.emqx.io:1883` under topic `college/weather/bme280`
-- **Debug / Serial Console:** `USART2` (`PA2/PA3` via onboard ST-Link V2-1 VCP @ 115200 baud)
-- **Cloud Reference:** OpenWeatherMap REST API (`api.openweathermap.org/data/2.5/weather`) for regional ground-truth validation
-- **Telemetry Visualizer:** Node-RED Interactive Dashboard with real-time gauges, trend charts, dynamic climate synthesis, and calibration delta analysis
-
-![Circuit Diagram](circuit.png)
+## 1. Experiment Details
+- **Course**: 25CS2741 — Foundations of Internet of Things + Lab
+- **Experiment / Task**: CAT15 — Real-Time BME280 Environmental Sensing, Multi-Variable Climate & Altitude Prediction via MQTT
+- **Hardware Target**: STM32 Nucleo-F401RE (ARM Cortex-M4 @ 84 MHz) + Bosch BME280 Environmental Sensor + Espressif ESP8266 (ESP-01 / NodeMCU AT Firmware)
+- **Communication Protocol**: I2C1 (BME280 @ 100 kHz), USART1 (ESP8266 @ 115200 baud), USART2 (ST-LINK Virtual COM Debug Port @ 115200 baud)
+- **IoT Protocol & Telemetry**: MQTT over TCP to Public EMQX Broker (`broker.emqx.io:1883`), Topic: `college/weather/bme280`
+- **Visualization & Edge Analytics**: Node-RED Flow (`node_red_flow.json`) with 13-output `Dynamic Analytics & Region Predictor` function, Analog Gauges, History Charts, and State Cards.
 
 ---
 
-### 2. Core Logic, Algorithms & Code Base
+## 2. Hardware Setup & Pin Mapping
 
-#### Working Principle
-
-1. **Bare-Metal Sensor Acquisition:**
-   - The STM32 interrogates `I2C1` to auto-detect the BME280 address (`0x76` with `SDO` tied to GND or `0x77` with `SDO` pulled HIGH).
-   - Sensor oversampling is configured to 1x for Temperature, Pressure, and Humidity using the official Bosch `BME280_SensorAPI`.
-   - Compensation trim formulas compute physical values: Temperature in °C, Barometric Pressure in hPa (`Pa / 100.0`), and Relative Humidity in %RH.
-
-2. **MQTT Publishing via Custom ESPLib:**
-   - The STM32 sends AT commands to configure the ESP8266 in Station Mode, connects to the Wi-Fi network, and opens a TCP socket to `broker.emqx.io:1883`.
-   - Formats a compact JSON payload:
-     ```json
-     {"temperature": 24.33, "pressure": 1012.47, "humidity": 64.75}
-     ```
-   - Publishes the payload using `MQTT_publishTopic("college/weather/bme280", mqttMessage, QoS0)`.
-
-3. **Node-RED Real-Time Analytics & Prediction Engine:**
-   - **Hypsometric Barometric Altitude:**
-     $$	ext{Altitude (m)} = 44330 	imes \left(1 - \left(rac{P}{1013.25}ight)^{0.190295}ight)$$
-   - **Dynamic Thermal Condition Classification:**
-     - $T > 26^\circ	ext{C}$: $	ext{🔥 HOT} \quad (+ \Delta T 	ext{ above } 26^\circ	ext{C})$
-     - $T < 24^\circ	ext{C}$: $	ext{❄️ TOO COLD} \quad (- \Delta T 	ext{ below } 24^\circ	ext{C})$
-     - $24^\circ	ext{C} \le T \le 26^\circ	ext{C}$: $	ext{🌿 COMFORTABLE} \quad (	ext{Optimum thermal band})$
-   - **Altitude Classification:**
-     - $P < 900	ext{ hPa}$: $	ext{⛰️ Alpine / Mountain Peak}$
-     - $900 \le P < 980	ext{ hPa}$: $	ext{🌲 High Plateau / Hill}$
-     - $P \ge 980	ext{ hPa}$: $	ext{🌊 Sea Level / Lowland}$
-   - **Moisture Classification:**
-     - $H > 70\%$: $	ext{🌧️ High Moisture / Humid}$
-     - $H < 40\%$: $	ext{🏜️ Arid / Dry}$
-     - $40\% \le H \le 70\%$: $	ext{💧 Comfortable}$
-
-4. **OpenWeatherMap REST API Integration & Ground-Truth Delta:**
-   - Node-RED periodically queries `https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric`.
-   - Compares the physical local BME280 sensor reading against the official regional cloud ground truth:
-     $$\Delta T = T_{	ext{BME280}} - T_{	ext{Cloud}}, \quad \Delta H = H_{	ext{BME280}} - H_{	ext{Cloud}}, \quad \Delta P = P_{	ext{BME280}} - P_{	ext{Cloud}}$$
-   - Detects microclimates, thermal heating effects (e.g. human body proximity, indoor HVAC), and verifies sensor calibration health.
+| Peripheral / Signal | STM32 Nucleo-F401RE Pin | Connected Module / Target | Function / Description |
+|---|---|---|---|
+| **I2C1_SCL** | `PB8` | BME280 `SCL` | I2C Clock (Standard Mode 100 kHz, 4.7 kΩ pull-up to +3.3V) |
+| **I2C1_SDA** | `PB9` | BME280 `SDA` | I2C Data Line (Standard Mode 100 kHz, 4.7 kΩ pull-up to +3.3V) |
+| **BME280 VCC** | `+3.3V` | BME280 `VCC` | +3.3V Power Supply |
+| **BME280 GND** | `GND` | BME280 `GND` | Common Ground Reference |
+| **BME280 SDO** | `GND` or `+3.3V` | BME280 `SDO` | Auto-detect I2C address: `0x76` (GND) or `0x77` (VCC) |
+| **USART1_TX** | `PA9` | ESP8266 `RXD` | UART TX from STM32 to ESP8266 AT Command Interface (115200 baud) |
+| **USART1_RX** | `PA10` | ESP8266 `TXD` | UART RX from ESP8266 responses to STM32 (115200 baud) |
+| **ESP8266 VCC** | `+3.3V` (Ext / Board) | ESP8266 `VCC` / `CH_PD` | Power Supply (+3.3V, decoupled with 100 µF capacitor) |
+| **ESP8266 GND** | `GND` | ESP8266 `GND` | Common Ground Reference |
+| **USART2_TX** | `PA2` | ST-LINK USB Bridge | Debug Telemetry Serial Print (115200 baud, 8N1) |
+| **USART2_RX** | `PA3` | ST-LINK USB Bridge | Debug RX |
+| **User LED** | `PA5` | Onboard Green LED (LD2) | Heartbeat toggle on every transmission cycle |
 
 ---
 
-### 3. Node-RED Dashboard Configuration & Import
+## 3. Circuit Diagram
 
-The file [node_red_flow.json](node_red_flow.json) contains the complete ready-to-import flow matching the lab specifications:
+![CAT15 Circuit Diagram](circuit.png)
 
-1. In Node-RED, open the top-right menu **☰ -> Import**.
-2. Select **[node_red_flow.json](node_red_flow.json)** and click **Import**.
-3. Open the **"Poll OpenWeatherMap API (5m)"** inject node and enter your free OpenWeatherMap API key into the `apiKey` property (or click **"Simulate Live Cloud Weather (Chennai)"** to test without an API key immediately).
+---
+
+## 4. Analytical & Mathematical Formulations
+
+### A. Hypsometric Barometric Altitude Equation
+Local atmospheric pressure measured by the BME280 sensor ($P$, in $\text{hPa}$) is converted to height above sea level using the standard international barometric formula:
+
+$$\text{Altitude (m)} = 44330 \times \left(1 - \left(\frac{P}{P_0}\right)^{0.190295}\right)$$
+
+where standard sea-level reference pressure $P_0 = 1013.25\text{ hPa}$.
+
+### B. Dynamic Thermal Classification
+The node evaluates ambient temperature $T$ (°C):
+- **Too Cold**: $T < 24.0\text{ }^\circ\text{C} \implies \Delta T = 24.0 - T$
+- **Comfortable / Optimal**: $24.0\text{ }^\circ\text{C} \le T \le 26.0\text{ }^\circ\text{C}$
+- **Warm / Hot**: $T > 26.0\text{ }^\circ\text{C} \implies \Delta T = T - 26.0$
+
+### C. Relative Humidity & Moisture Regimes
+- **Arid / Dry**: $\text{RH} < 30\%$
+- **Comfortable**: $30\% \le \text{RH} \le 60\%$
+- **Humid / Damp**: $\text{RH} > 60\%$
+
+### D. Altitude Classification
+- **Sea Level / Lowland**: $\text{Altitude} < 200\text{ m}$
+- **Plateau / Midland**: $200\text{ m} \le \text{Altitude} \le 800\text{ m}$
+- **Mountain Hill Station**: $\text{Altitude} > 800\text{ m}$
+
+---
+
+## 5. Node-RED Flow & Dashboard Architecture
+
+The Node-RED flow is provided in [node_red_flow.json](node_red_flow.json).
+
+```text
+                                              ┌──> Regional Climate Prediction (UI Text)
+                                              ├──> Thermal State Card (UI Text)
+                                              ├──> Altitude Prediction Card (UI Text)
+ [BME280 Telemetry In] ──┬──> [Raw Telemetry] ├──> Moisture State Card (UI Text)
+   (MQTT: broker.emqx.io)│                    ├──> Real-time Temperature Chart (UI Line Chart)
+                         │                    ├──> Real-time Humidity Chart (UI Line Chart)
+ [Test Injects (4x)] ────┴──> [Dynamic       ├──> Real-time Pressure Chart (UI Line Chart)
+                               Analytics &    ├──> Temperature Gauge (UI Analog Gauge)
+                               Region         ├──> Humidity Gauge (UI Analog Gauge)
+                               Predictor]     ├──> Pressure Gauge (UI Analog Gauge)
+                                              ├──> Temperature Display (UI Text Display)
+                                              ├──> Humidity Display (UI Text Display)
+                                              └──> Pressure Display (UI Text Display)
+```
+
+### Dashboard Tabs & Groups
+1. **Dynamic Climate & Altitude Predictions**:
+   - `Regional Climate Synthesis`: Holistic environmental state assessment.
+   - `Dynamic Thermal Condition`: Real-time temperature status relative to 24°C–26°C comfort band.
+   - `Altitude Classification`: Lowland, Plateau, or Mountain Hill Station categorization.
+   - `Moisture Level`: Dry, Comfortable, or Humid state.
+2. **Real-Time Environmental Charts**:
+   - Real-time Temperature history line graph.
+   - Real-time Humidity history line graph.
+   - Real-time Barometric Pressure history trend.
+3. **Live Meters & Current Values**:
+   - Color-coded analog gauges for Temperature, Humidity, and Pressure.
+   - Digital readouts showing instantaneous physical values.
+
+---
+
+## 6. How to Deploy & Run
+
+### Step 1: Keil µVision Firmware Flash
+1. Open the Keil project: `STM32/CAT15/TASK15/MDK-ARM/IOT_project.uvprojx`.
+2. Connect your STM32 Nucleo-F401RE board via USB.
+3. In `Core/Src/main.c`, update Wi-Fi credentials if needed:
+   ```c
+   ESP_Init("YOUR_WIFI_SSID", "YOUR_WIFI_PASSWORD");
+   ```
+4. Build the project (`F7`) and click **Download** (`F8`) to flash the target.
+
+### Step 2: Node-RED Flow Import
+1. Open Node-RED in your browser: `http://localhost:1880`.
+2. Click **Menu (top-right) → Import**.
+3. Select or paste the contents of [node_red_flow.json](node_red_flow.json).
 4. Click **Deploy**.
-5. Navigate to `http://localhost:1880/ui` to view the live dashboard:
-   - **🧠 Dynamic Climate & Altitude Predictions**: Real-time regional synthesis, thermal status, altitude category, and moisture level.
-   - **📈 Real-Time Environmental Charts**: Live scrolling historical trends for Temperature, Humidity, and Pressure.
-   - **⚡ Live Meters & Current Values**: Analog gauges and large digital displays for instant readings.
-   - **☁️ OpenWeatherMap Ground-Truth Sync**: Cloud weather summary and real-time microclimate delta indicators.
+5. Open the Node-RED UI dashboard at `http://localhost:1880/ui`.
+
+### Step 3: Immediate Live Testing
+- Click any of the 4 test buttons on the Node-RED canvas:
+  - `Test: >26°C (Increasingly Hot: 29.5°C)`
+  - `Test: <24°C (Too Cold: 21.0°C)`
+  - `Test: 24°C - 26°C (Comfortable: 25.2°C)`
+  - `Test: Mountain Hill Station (15.5°C, 885 hPa)`
+- Observe instantaneous updates across all cards, graphs, and gauges!
 
 ---
 
-### 4. Inference
+## 7. Inference
 
-- Physical changes applied to the BME280 sensor (finger touch, warm breath, or enclosure pressure changes) propagate over MQTT and update the Node-RED dashboard in real time with sub-second latency.
-- Integrating OpenWeatherMap cloud ground truth provides a practical IoT baseline for comparing localized microclimate indoor environments with regional outdoor conditions and validating embedded sensor calibration.
+1. **Precision Sensing**: The Bosch BME280 sensor successfully reads barometric pressure, ambient temperature, and relative humidity over the I2C bus at 100 kHz.
+2. **Reliable Wireless IoT Pipeline**: The STM32 Nucleo-F401RE commands the ESP8266 module via USART1 AT commands, maintaining continuous MQTT publishing to `broker.emqx.io` with zero data loss.
+3. **Multi-Parameter Edge Analytics**: The 13-output Node-RED analytic function accurately transforms raw telemetry into human-interpretable environmental classifications (barometric altitude estimation, thermal comfort offset, moisture status, and synthesized climate prediction) displayed in real time on a responsive dashboard.

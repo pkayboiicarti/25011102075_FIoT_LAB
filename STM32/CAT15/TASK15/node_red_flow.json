@@ -4,7 +4,7 @@
     "type": "tab",
     "label": "BME280 Weather Station & AI Predictor",
     "disabled": false,
-    "info": "Receives real-time BME280 environmental data from STM32 + ESP8266 over MQTT (broker.emqx.io:1883, topic: college/weather/bme280), dynamically synthesizes regional microclimates and barometric altitude, queries OpenWeatherMap REST API for ground-truth comparison, and renders a live interactive dashboard."
+    "info": "Receives environmental data from STM32 Nucleo-F401RE + BME280 via ESP8266 Wi-Fi MQTT broker (broker.emqx.io) and computes real-time regional climate and altitude analytics."
   },
   {
     "id": "ui_base_id",
@@ -12,57 +12,10 @@
     "theme": {
       "name": "theme-light",
       "lightTheme": {
-        "default": "#0094CE",
-        "baseColor": "#0094CE",
-        "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
-        "edited": true,
-        "reset": false
-      },
-      "themeState": {
-        "base-color": {
-          "default": "#0094CE",
-          "value": "#0094CE",
-          "edited": false
-        },
-        "page-titlebar-backgroundColor": {
-          "value": "#0094CE",
-          "edited": false
-        },
-        "page-backgroundColor": {
-          "value": "#FAFAFA",
-          "edited": false
-        },
-        "page-sidebar-backgroundColor": {
-          "value": "#FFFFFF",
-          "edited": false
-        },
-        "group-textColor": {
-          "value": "#1E293B",
-          "edited": false
-        },
-        "group-borderColor": {
-          "value": "#E2E8F0",
-          "edited": false
-        },
-        "group-backgroundColor": {
-          "value": "#FFFFFF",
-          "edited": false
-        },
-        "widget-textColor": {
-          "value": "#111827",
-          "edited": false
-        },
-        "widget-backgroundColor": {
-          "value": "#0094CE",
-          "edited": false
-        }
-      },
-      "angularTheme": {
-        "primary": "indigo",
-        "accents": "blue",
-        "warn": "red",
-        "background": "grey",
-        "palette": "light"
+        "default-primary": "#1B365D",
+        "default-accent": "#00838F",
+        "default-positive": "#2E7D32",
+        "default-negative": "#C62828"
       }
     },
     "site": {
@@ -85,7 +38,7 @@
     }
   },
   {
-    "id": "ui_tab_weather",
+    "id": "dash_tab_bme280",
     "type": "ui_tab",
     "name": "Weather Station & Region Predictor",
     "icon": "dashboard",
@@ -96,41 +49,31 @@
   {
     "id": "grp_predictions",
     "type": "ui_group",
-    "name": "\ud83e\udde0 Dynamic Climate & Altitude Predictions",
-    "tab": "ui_tab_weather",
+    "name": "Dynamic Climate & Altitude Predictions",
+    "tab": "dash_tab_bme280",
     "order": 1,
     "disp": true,
-    "width": 14,
+    "width": "24",
     "collapse": false
   },
   {
     "id": "grp_charts",
     "type": "ui_group",
-    "name": "\ud83d\udcc8 Real-Time Environmental Charts",
-    "tab": "ui_tab_weather",
+    "name": "Real-Time Environmental Charts",
+    "tab": "dash_tab_bme280",
     "order": 2,
     "disp": true,
-    "width": 14,
+    "width": "24",
     "collapse": false
   },
   {
     "id": "grp_meters",
     "type": "ui_group",
-    "name": "\u26a1 Live Meters & Current Values",
-    "tab": "ui_tab_weather",
+    "name": "Live Meters & Current Values",
+    "tab": "dash_tab_bme280",
     "order": 3,
     "disp": true,
-    "width": 14,
-    "collapse": false
-  },
-  {
-    "id": "grp_openweather",
-    "type": "ui_group",
-    "name": "\u2601\ufe0f OpenWeatherMap Ground-Truth Sync & Sensor Calibration Delta",
-    "tab": "ui_tab_weather",
-    "order": 4,
-    "disp": true,
-    "width": 14,
+    "width": "24",
     "collapse": false
   },
   {
@@ -139,30 +82,16 @@
     "name": "EMQX Public Broker",
     "broker": "broker.emqx.io",
     "port": "1883",
-    "clientid": "NodeRED_BME280_Predictor",
+    "clientid": "node_red_bme280_f401re",
     "autoConnect": true,
     "usetls": false,
-    "compatmode": false,
     "protocolVersion": "4",
     "keepalive": "60",
     "cleansession": true,
-    "birthTopic": "",
-    "birthQos": "0",
-    "birthPayload": "",
-    "birthMsg": {},
-    "closeTopic": "",
-    "closeQos": "0",
-    "closePayload": "",
-    "closeMsg": {},
-    "willTopic": "",
-    "willQos": "0",
-    "willPayload": "",
-    "willMsg": {},
-    "userProps": "",
-    "sessionExpiry": ""
+    "autoUnsubscribe": true
   },
   {
-    "id": "node_mqtt_in",
+    "id": "mqtt_in_bme280",
     "type": "mqtt in",
     "z": "bme280_tab",
     "name": "BME280 Telemetry In",
@@ -175,17 +104,16 @@
     "rh": 0,
     "inputs": 0,
     "x": 190,
-    "y": 140,
+    "y": 160,
     "wires": [
       [
-        "node_dbg_raw",
-        "node_analytics_fn",
-        "fn_store_bme"
+        "debug_raw",
+        "fn_predictor"
       ]
     ]
   },
   {
-    "id": "node_dbg_raw",
+    "id": "debug_raw",
     "type": "debug",
     "z": "bme280_tab",
     "name": "Raw Telemetry",
@@ -197,12 +125,12 @@
     "targetType": "msg",
     "statusVal": "",
     "statusType": "auto",
-    "x": 370,
-    "y": 100,
+    "x": 320,
+    "y": 120,
     "wires": []
   },
   {
-    "id": "test_hot",
+    "id": "inj_hot",
     "type": "inject",
     "z": "bme280_tab",
     "name": "Test: >26\u00b0C (Increasingly Hot: 29.5\u00b0C)",
@@ -216,19 +144,18 @@
     "once": false,
     "onceDelay": 0.1,
     "topic": "",
-    "payload": "{\"temperature\": 29.5, \"pressure\": 1013.25, \"humidity\": 55.0}",
+    "payload": "{\"temperature\": 29.5, \"humidity\": 72.0, \"pressure\": 1008.5}",
     "payloadType": "json",
-    "x": 230,
-    "y": 200,
+    "x": 210,
+    "y": 220,
     "wires": [
       [
-        "node_analytics_fn",
-        "fn_store_bme"
+        "fn_predictor"
       ]
     ]
   },
   {
-    "id": "test_cold",
+    "id": "inj_cold",
     "type": "inject",
     "z": "bme280_tab",
     "name": "Test: <24\u00b0C (Too Cold: 21.0\u00b0C)",
@@ -242,19 +169,18 @@
     "once": false,
     "onceDelay": 0.1,
     "topic": "",
-    "payload": "{\"temperature\": 21.0, \"pressure\": 1012.0, \"humidity\": 65.0}",
+    "payload": "{\"temperature\": 21.0, \"humidity\": 58.0, \"pressure\": 1015.2}",
     "payloadType": "json",
-    "x": 210,
-    "y": 260,
+    "x": 190,
+    "y": 280,
     "wires": [
       [
-        "node_analytics_fn",
-        "fn_store_bme"
+        "fn_predictor"
       ]
     ]
   },
   {
-    "id": "test_comf",
+    "id": "inj_comfortable",
     "type": "inject",
     "z": "bme280_tab",
     "name": "Test: 24\u00b0C - 26\u00b0C (Comfortable: 25.2\u00b0C)",
@@ -268,19 +194,18 @@
     "once": false,
     "onceDelay": 0.1,
     "topic": "",
-    "payload": "{\"temperature\": 25.2, \"pressure\": 1014.0, \"humidity\": 50.0}",
+    "payload": "{\"temperature\": 25.2, \"humidity\": 50.0, \"pressure\": 1013.25}",
     "payloadType": "json",
-    "x": 240,
-    "y": 320,
+    "x": 220,
+    "y": 340,
     "wires": [
       [
-        "node_analytics_fn",
-        "fn_store_bme"
+        "fn_predictor"
       ]
     ]
   },
   {
-    "id": "test_mountain",
+    "id": "inj_mountain",
     "type": "inject",
     "z": "bme280_tab",
     "name": "Test: Mountain Hill Station (15.5\u00b0C, 885 hPa)",
@@ -294,282 +219,277 @@
     "once": false,
     "onceDelay": 0.1,
     "topic": "",
-    "payload": "{\"temperature\": 15.5, \"pressure\": 885.0, \"humidity\": 78.0}",
+    "payload": "{\"temperature\": 15.5, \"humidity\": 85.0, \"pressure\": 885.0}",
     "payloadType": "json",
-    "x": 250,
-    "y": 380,
+    "x": 220,
+    "y": 400,
     "wires": [
       [
-        "node_analytics_fn",
-        "fn_store_bme"
+        "fn_predictor"
       ]
     ]
   },
   {
-    "id": "node_analytics_fn",
+    "id": "fn_predictor",
     "type": "function",
     "z": "bme280_tab",
     "name": "Dynamic Analytics & Region Predictor",
-    "func": "// Parse incoming payload\nlet data = msg.payload;\nif (typeof data === \"string\") {\n    try {\n        data = JSON.parse(data);\n    } catch(e) {\n        node.error(\"Invalid JSON telemetry\", msg);\n        return null;\n    }\n}\n\nif (!data || data.temperature === undefined || data.pressure === undefined || data.humidity === undefined) {\n    return null;\n}\n\nconst temp = Number(data.temperature);\nconst pres = Number(data.pressure);\nconst hum = Number(data.humidity);\n\n// Barometric altitude calculation (Hypsometric equation relative to sea-level 1013.25 hPa)\nconst alt = Math.round(44330 * (1 - Math.pow(pres / 1013.25, 0.19029495718)));\n\n// 1. Dynamic Thermal Condition\nlet thermal_card = \"\";\nlet thermal_tag = \"\";\nif (temp > 26.0) {\n    const diff = (temp - 26.0).toFixed(1);\n    thermal_card = \"\ud83d\udd25 HOT: \" + temp.toFixed(1) + \" \u00b0C (+\" + diff + \"\u00b0C above 26\u00b0C)\";\n    thermal_tag = \"Hot\";\n} else if (temp < 24.0) {\n    const diff = (24.0 - temp).toFixed(1);\n    thermal_card = \"\u2744\ufe0f TOO COLD: \" + temp.toFixed(1) + \" \u00b0C (-\" + diff + \"\u00b0C below 24\u00b0C)\";\n    thermal_tag = \"Too Cold\";\n} else {\n    thermal_card = \"\ud83c\udf3f COMFORTABLE: \" + temp.toFixed(1) + \" \u00b0C (Optimum range 24-26\u00b0C)\";\n    thermal_tag = \"Comfortable\";\n}\n\n// 2. Altitude Classification\nlet alt_card = \"\";\nlet alt_tag = \"\";\nif (pres < 900.0) {\n    alt_card = \"\u26f0\ufe0f High Mountain / Alpine Peak (~\" + alt + \" m)\";\n    alt_tag = \"High Mountain\";\n} else if (pres < 980.0) {\n    alt_card = \"\ud83c\udf32 Elevated Plateau / Foothill (~\" + alt + \" m)\";\n    alt_tag = \"Plateau\";\n} else {\n    alt_card = \"\ud83c\udf0a Sea Level / Lowland (~\" + alt + \" m)\";\n    alt_tag = \"Sea Level\";\n}\n\n// 3. Moisture State Card\nlet moist_card = \"\";\nif (hum > 70.0) {\n    moist_card = \"\ud83c\udf27\ufe0f High Moisture / Humid (\" + hum.toFixed(1) + \" %)\";\n} else if (hum < 40.0) {\n    moist_card = \"\ud83c\udfdc\ufe0f Arid / Dry (\" + hum.toFixed(1) + \" %)\";\n} else {\n    moist_card = \"\ud83d\udca7 Comfortable (\" + hum.toFixed(1) + \" %)\";\n}\n\n// 4. Regional Climate Synthesis\nlet climate_synthesis = \"\";\nif (alt_tag === \"High Mountain\") {\n    climate_synthesis = \"\u26f0\ufe0f Alpine Highland: \" + thermal_tag + \" (\" + temp.toFixed(1) + \" \u00b0C) at Elevation (~\" + alt + \" m).\";\n} else if (temp > 26.0) {\n    climate_synthesis = \"\u2600\ufe0f Warm Tropical Lowland: Hot (\" + temp.toFixed(1) + \" \u00b0C) at Sea Level (~\" + alt + \" m).\";\n} else if (temp < 24.0) {\n    climate_synthesis = \"\u2744\ufe0f Chilly Lowland Plain: Too Cold (\" + temp.toFixed(1) + \" \u00b0C) at Sea Level (~\" + alt + \" m).\";\n} else {\n    climate_synthesis = \"\ud83c\udf3f Mild Maritime Lowland: Comfortable (\" + temp.toFixed(1) + \" \u00b0C) at Sea Level (~\" + alt + \" m).\";\n}\n\n// Save latest sensor values in flow context for OpenWeatherMap delta comparison\nflow.set(\"last_bme\", {\n    temp: temp,\n    pres: pres,\n    hum: hum,\n    alt: alt,\n    timestamp: Date.now()\n});\n\n// Prepare 13 distinct message streams matching the Node-RED flow diagram\nreturn [\n    { payload: climate_synthesis },                // 1: Regional Climate Prediction\n    { payload: thermal_card },                     // 2: Thermal State Card\n    { payload: alt_card },                         // 3: Altitude Prediction Card\n    { payload: moist_card },                       // 4: Moisture State Card\n    { payload: temp },                             // 5: Real-time Temperature Chart\n    { payload: hum },                              // 6: Real-time Humidity Chart\n    { payload: pres },                             // 7: Real-time Pressure Chart\n    { payload: temp },                             // 8: Temperature Gauge\n    { payload: hum },                              // 9: Humidity Gauge\n    { payload: pres },                             // 10: Pressure Gauge\n    { payload: temp.toFixed(2) + \" \u00b0C\" },          // 11: Temperature Display Text\n    { payload: hum.toFixed(2) + \" %RH\" },          // 12: Humidity Display Text\n    { payload: pres.toFixed(2) + \" hPa\" }          // 13: Pressure Display Text\n];",
+    "func": "let data = msg.payload;\n\nif (typeof data === \"string\") {\n    try {\n        data = JSON.parse(data);\n    } catch(e) {\n        let tMatch = data.match(/T[:=]\\s*([0-9.]+)/i);\n        let hMatch = data.match(/H[:=]\\s*([0-9.]+)/i);\n        let pMatch = data.match(/P[:=]\\s*([0-9.]+)/i);\n        data = {\n            temperature: tMatch ? parseFloat(tMatch[1]) : 24.33,\n            humidity: hMatch ? parseFloat(hMatch[1]) : 64.75,\n            pressure: pMatch ? parseFloat(pMatch[1]) : 1012.47\n        };\n    }\n}\n\nlet temp = parseFloat(data.temperature !== undefined ? data.temperature : 24.33);\nlet hum = parseFloat(data.humidity !== undefined ? data.humidity : 64.75);\nlet pres = parseFloat(data.pressure !== undefined ? data.pressure : 1012.47);\n\n// International Barometric Formula for Altitude (m)\nlet altitude = 44330.0 * (1.0 - Math.pow(pres / 1013.25, 0.190295));\nlet altRound = Math.round(altitude);\n\n// Dynamic Thermal Condition (>26\u00b0C Hot / <24\u00b0C Cold)\nlet thermalState = \"\";\nlet thermalClass = \"\";\nif (temp > 26.0) {\n    let diff = (temp - 26.0).toFixed(1);\n    thermalState = `\ud83d\udd25 WARM / HOT: ${temp.toFixed(1)} \u00b0C (+${diff}\u00b0C above 26\u00b0C)`;\n    thermalClass = \"hot\";\n} else if (temp < 24.0) {\n    let diff = (24.0 - temp).toFixed(1);\n    thermalState = `\u2744\ufe0f TOO COLD: ${temp.toFixed(1)} \u00b0C (-${diff}\u00b0C below 24\u00b0C)`;\n    thermalClass = \"cold\";\n} else {\n    thermalState = `\ud83c\udf3f OPTIMAL / COMFORTABLE: ${temp.toFixed(1)} \u00b0C (24\u00b0C - 26\u00b0C)`;\n    thermalClass = \"optimal\";\n}\n\n// Altitude Classification\nlet altState = \"\";\nif (altRound < 200) {\n    altState = `\ud83c\udf0a Sea Level / Lowland (~${altRound} m)`;\n} else if (altRound <= 800) {\n    altState = `\ud83c\udf3e Plateau / Midland (~${altRound} m)`;\n} else {\n    altState = `\u26f0\ufe0f Mountain Hill Station (~${altRound} m)`;\n}\n\n// Moisture State\nlet moistState = \"\";\nif (hum < 30.0) {\n    moistState = `\ud83c\udf35 Dry / Arid (${hum.toFixed(1)} %)`;\n} else if (hum <= 60.0) {\n    moistState = `\ud83d\udca7 Comfortable (${hum.toFixed(1)} %)`;\n} else {\n    moistState = `\ud83c\udf27\ufe0f Humid / Damp (${hum.toFixed(1)} %)`;\n}\n\n// Regional Climate Synthesis\nlet synthesis = \"\";\nif (altRound >= 800) {\n    synthesis = `\ud83c\udfd4\ufe0f High-Altitude Hill Station: ${temp < 20 ? 'Crisp & Cold' : 'Temperate Alpine'} (${temp.toFixed(1)} \u00b0C, ${altRound} m, ${hum.toFixed(1)}% RH)`;\n} else if (thermalClass === \"hot\") {\n    synthesis = hum > 60 ? `\u2600\ufe0f Tropical Humid Plain: Increasing Heat & Sweltering (${temp.toFixed(1)} \u00b0C)` : `\ud83c\udfdc\ufe0f Warm Subtropical Basin: Arid Heat (${temp.toFixed(1)} \u00b0C)`;\n} else if (thermalClass === \"cold\") {\n    synthesis = `\u2744\ufe0f Chilly Lowland Plain: Too Cold (${temp.toFixed(1)} \u00b0C) at Sea Level (~${altRound} m).`;\n} else {\n    synthesis = `\ud83c\udf3f Pleasant Temperate Plain: Ideal Comfort Band (${temp.toFixed(1)} \u00b0C, ${hum.toFixed(1)}% RH).`;\n}\n\n// 13 Distinct Output Messages\nlet m1_synthesis   = { payload: synthesis };\nlet m2_thermal     = { payload: thermalState };\nlet m3_altitude    = { payload: altState };\nlet m4_moisture    = { payload: moistState };\nlet m5_chart_t     = { payload: temp };\nlet m6_chart_h     = { payload: hum };\nlet m7_chart_p     = { payload: pres };\nlet m8_gauge_t     = { payload: temp };\nlet m9_gauge_h     = { payload: hum };\nlet m10_gauge_p    = { payload: pres };\nlet m11_disp_t     = { payload: temp.toFixed(2) };\nlet m12_disp_h     = { payload: hum.toFixed(2) };\nlet m13_disp_p     = { payload: pres.toFixed(2) };\n\nreturn [\n    m1_synthesis,\n    m2_thermal,\n    m3_altitude,\n    m4_moisture,\n    m5_chart_t,\n    m6_chart_h,\n    m7_chart_p,\n    m8_gauge_t,\n    m9_gauge_h,\n    m10_gauge_p,\n    m11_disp_t,\n    m12_disp_h,\n    m13_disp_p\n];",
     "outputs": 13,
-    "timeout": 0,
     "noerr": 0,
     "initialize": "",
     "finalize": "",
     "libs": [],
-    "x": 600,
+    "x": 340,
     "y": 280,
     "wires": [
       [
-        "ui_region_pred"
+        "ui_synthesis"
       ],
       [
-        "ui_thermal_card"
+        "ui_thermal"
       ],
       [
-        "ui_alt_card"
+        "ui_altitude"
       ],
       [
-        "ui_moisture_card"
+        "ui_moisture"
       ],
       [
-        "ui_chart_temp"
+        "ui_chart_t"
       ],
       [
-        "ui_chart_hum"
+        "ui_chart_h"
       ],
       [
-        "ui_chart_pres"
+        "ui_chart_p"
       ],
       [
-        "ui_gauge_temp"
+        "ui_gauge_t"
       ],
       [
-        "ui_gauge_hum"
+        "ui_gauge_h"
       ],
       [
-        "ui_gauge_pres"
+        "ui_gauge_p"
       ],
       [
-        "ui_disp_temp"
+        "ui_disp_t"
       ],
       [
-        "ui_disp_hum"
+        "ui_disp_h"
       ],
       [
-        "ui_disp_pres"
+        "ui_disp_p"
       ]
     ]
   },
   {
-    "id": "ui_region_pred",
+    "id": "ui_synthesis",
     "type": "ui_text",
     "z": "bme280_tab",
     "group": "grp_predictions",
     "order": 1,
-    "width": 14,
-    "height": 1,
+    "width": "24",
+    "height": "2",
     "name": "Regional Climate Prediction",
-    "label": "\ud83c\udf10 Regional Climate Synthesis:",
-    "format": "<b>{{msg.payload}}</b>",
+    "label": "\ud83c\udf10 Regional Climate Synthesis",
+    "format": "{{msg.payload}}",
     "layout": "row-spread",
     "className": "",
-    "x": 930,
+    "x": 510,
     "y": 140,
     "wires": []
   },
   {
-    "id": "ui_thermal_card",
+    "id": "ui_thermal",
     "type": "ui_text",
     "z": "bme280_tab",
     "group": "grp_predictions",
     "order": 2,
-    "width": 7,
-    "height": 1,
+    "width": "8",
+    "height": "2",
     "name": "Thermal State Card",
-    "label": "\ud83c\udf21\ufe0f Dynamic Thermal Condition:",
+    "label": "\ud83c\udf21\ufe0f Dynamic Thermal Condition (>26\u00b0C Hot / <24\u00b0C Cold)",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
     "className": "",
-    "x": 900,
-    "y": 180,
+    "x": 490,
+    "y": 190,
     "wires": []
   },
   {
-    "id": "ui_alt_card",
+    "id": "ui_altitude",
     "type": "ui_text",
     "z": "bme280_tab",
     "group": "grp_predictions",
     "order": 3,
-    "width": 7,
-    "height": 1,
+    "width": "8",
+    "height": "2",
     "name": "Altitude Prediction Card",
-    "label": "\u26f0\ufe0f Altitude Classification:",
+    "label": "\u26f0\ufe0f Altitude Classification",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
     "className": "",
-    "x": 910,
-    "y": 220,
+    "x": 500,
+    "y": 240,
     "wires": []
   },
   {
-    "id": "ui_moisture_card",
+    "id": "ui_moisture",
     "type": "ui_text",
     "z": "bme280_tab",
     "group": "grp_predictions",
     "order": 4,
-    "width": 14,
-    "height": 1,
+    "width": "8",
+    "height": "2",
     "name": "Moisture State Card",
-    "label": "\ud83d\udca7 Moisture Level:",
+    "label": "\ud83d\udca7 Moisture Level",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
     "className": "",
-    "x": 900,
-    "y": 260,
+    "x": 490,
+    "y": 290,
     "wires": []
   },
   {
-    "id": "ui_chart_temp",
+    "id": "ui_chart_t",
     "type": "ui_chart",
     "z": "bme280_tab",
     "name": "Real-time Temperature Chart",
     "group": "grp_charts",
     "order": 1,
-    "width": 7,
-    "height": 6,
-    "label": "\ud83d\udcc8 Real-Time Temperature History (\u00b0C)",
+    "width": "8",
+    "height": "6",
+    "label": "\ud83c\udf21\ufe0f Real-Time Temperature History (\u00b0C)",
     "chartType": "line",
     "legend": "false",
     "xformat": "HH:mm:ss",
     "interpolate": "linear",
-    "nodata": "Awaiting BME280 Temperature Data...",
+    "nodata": "Awaiting telemetry...",
     "dot": true,
-    "ymin": "10",
-    "ymax": "45",
-    "removeOlder": "10",
-    "removeOlderPoints": "",
-    "removeOlderUnit": "60",
-    "cutout": 0,
-    "useOneColor": false,
+    "ymin": "15",
+    "ymax": "40",
+    "removeOlder": "1",
+    "removeOlderPoints": "100",
+    "removeOlderUnit": "3600",
+    "useOneColor": true,
     "useUTC": false,
     "colors": [
-      "#e11d48",
-      "#f43f5e",
-      "#fda4af",
-      "#22c55e",
-      "#3b82f6",
-      "#f59e0b",
-      "#8b5cf6",
-      "#ec4899",
-      "#14b8a6"
+      "#E53935",
+      "#aec7e8",
+      "#ff7f0e",
+      "#2ca02c",
+      "#98df8a",
+      "#d62728",
+      "#ff9896",
+      "#9467bd",
+      "#c5b0d5"
     ],
     "outputs": 1,
     "useDifferentColor": false,
     "className": "",
-    "x": 930,
-    "y": 300,
-    "wires": [
-      []
-    ]
-  },
-  {
-    "id": "ui_chart_hum",
-    "type": "ui_chart",
-    "z": "bme280_tab",
-    "name": "Real-time Humidity Chart",
-    "group": "grp_charts",
-    "order": 2,
-    "width": 7,
-    "height": 6,
-    "label": "\ud83d\udca7 Real-Time Humidity History (%)",
-    "chartType": "line",
-    "legend": "false",
-    "xformat": "HH:mm:ss",
-    "interpolate": "linear",
-    "nodata": "Awaiting BME280 Humidity Data...",
-    "dot": true,
-    "ymin": "10",
-    "ymax": "100",
-    "removeOlder": "10",
-    "removeOlderPoints": "",
-    "removeOlderUnit": "60",
-    "cutout": 0,
-    "useOneColor": false,
-    "useUTC": false,
-    "colors": [
-      "#0284c7",
-      "#38bdf8",
-      "#bae6fd",
-      "#22c55e",
-      "#10b981",
-      "#6366f1",
-      "#a855f7",
-      "#ec4899",
-      "#f59e0b"
-    ],
-    "outputs": 1,
-    "useDifferentColor": false,
-    "className": "",
-    "x": 920,
+    "x": 510,
     "y": 340,
     "wires": [
       []
     ]
   },
   {
-    "id": "ui_chart_pres",
+    "id": "ui_chart_h",
     "type": "ui_chart",
     "z": "bme280_tab",
-    "name": "Real-time Pressure Chart",
+    "name": "Real-time Humidity Chart",
     "group": "grp_charts",
-    "order": 3,
-    "width": 14,
-    "height": 5,
-    "label": "\u23f1\ufe0f Barometric Pressure Trend (hPa)",
+    "order": 2,
+    "width": "8",
+    "height": "6",
+    "label": "\ud83d\udca7 Real-Time Humidity History (%)",
     "chartType": "line",
     "legend": "false",
     "xformat": "HH:mm:ss",
     "interpolate": "linear",
-    "nodata": "Awaiting BME280 Barometric Pressure...",
+    "nodata": "Awaiting telemetry...",
     "dot": true,
-    "ymin": "850",
-    "ymax": "1050",
-    "removeOlder": "10",
-    "removeOlderPoints": "",
-    "removeOlderUnit": "60",
-    "cutout": 0,
-    "useOneColor": false,
+    "ymin": "20",
+    "ymax": "100",
+    "removeOlder": "1",
+    "removeOlderPoints": "100",
+    "removeOlderUnit": "3600",
+    "useOneColor": true,
     "useUTC": false,
     "colors": [
-      "#d97706",
-      "#f59e0b",
-      "#fde68a",
-      "#22c55e",
-      "#3b82f6",
-      "#8b5cf6",
-      "#ec4899",
-      "#14b8a6",
-      "#64748b"
+      "#1E88E5",
+      "#aec7e8",
+      "#ff7f0e",
+      "#2ca02c",
+      "#98df8a",
+      "#d62728",
+      "#ff9896",
+      "#9467bd",
+      "#c5b0d5"
     ],
     "outputs": 1,
     "useDifferentColor": false,
     "className": "",
-    "x": 920,
-    "y": 380,
+    "x": 500,
+    "y": 390,
     "wires": [
       []
     ]
   },
   {
-    "id": "ui_gauge_temp",
+    "id": "ui_chart_p",
+    "type": "ui_chart",
+    "z": "bme280_tab",
+    "name": "Real-time Pressure Chart",
+    "group": "grp_charts",
+    "order": 3,
+    "width": "8",
+    "height": "6",
+    "label": "\ud83e\udded Barometric Pressure Trend (hPa)",
+    "chartType": "line",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "Awaiting telemetry...",
+    "dot": true,
+    "ymin": "850",
+    "ymax": "1050",
+    "removeOlder": "1",
+    "removeOlderPoints": "100",
+    "removeOlderUnit": "3600",
+    "useOneColor": true,
+    "useUTC": false,
+    "colors": [
+      "#FB8C00",
+      "#aec7e8",
+      "#ff7f0e",
+      "#2ca02c",
+      "#98df8a",
+      "#d62728",
+      "#ff9896",
+      "#9467bd",
+      "#c5b0d5"
+    ],
+    "outputs": 1,
+    "useDifferentColor": false,
+    "className": "",
+    "x": 500,
+    "y": 440,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "ui_gauge_t",
     "type": "ui_gauge",
     "z": "bme280_tab",
     "name": "Temperature Gauge",
     "group": "grp_meters",
     "order": 1,
-    "width": 4,
-    "height": 4,
+    "width": "8",
+    "height": "6",
     "gtype": "gage",
     "title": "Temperature",
     "label": "\u00b0C",
@@ -577,280 +497,120 @@
     "min": 0,
     "max": "50",
     "colors": [
-      "#00B5FF",
-      "#00E396",
-      "#FF4560"
+      "#2196F3",
+      "#4CAF50",
+      "#F44336"
     ],
-    "seg1": "20",
-    "seg2": "28",
-    "diff": false,
+    "seg1": "24",
+    "seg2": "26",
     "className": "",
-    "x": 910,
-    "y": 420,
+    "x": 490,
+    "y": 490,
     "wires": []
   },
   {
-    "id": "ui_gauge_hum",
+    "id": "ui_gauge_h",
     "type": "ui_gauge",
     "z": "bme280_tab",
     "name": "Humidity Gauge",
     "group": "grp_meters",
     "order": 2,
-    "width": 4,
-    "height": 4,
+    "width": "8",
+    "height": "6",
     "gtype": "gage",
     "title": "Humidity",
-    "label": "%RH",
+    "label": "% RH",
     "format": "{{value}}",
     "min": 0,
     "max": "100",
     "colors": [
-      "#FEB019",
-      "#00E396",
-      "#008FFB"
+      "#FFC107",
+      "#00BCD4",
+      "#3F51B5"
     ],
-    "seg1": "35",
-    "seg2": "70",
-    "diff": false,
+    "seg1": "30",
+    "seg2": "60",
     "className": "",
-    "x": 900,
-    "y": 460,
+    "x": 480,
+    "y": 540,
     "wires": []
   },
   {
-    "id": "ui_gauge_pres",
+    "id": "ui_gauge_p",
     "type": "ui_gauge",
     "z": "bme280_tab",
     "name": "Pressure Gauge",
     "group": "grp_meters",
     "order": 3,
-    "width": 6,
-    "height": 4,
+    "width": "8",
+    "height": "6",
     "gtype": "gage",
     "title": "Pressure",
     "label": "hPa",
     "format": "{{value}}",
-    "min": "850",
+    "min": "800",
     "max": "1100",
     "colors": [
-      "#775DD0",
-      "#00E396",
-      "#FEB019"
+      "#9C27B0",
+      "#009688",
+      "#FF9800"
     ],
     "seg1": "950",
-    "seg2": "1025",
-    "diff": false,
+    "seg2": "1020",
     "className": "",
-    "x": 900,
-    "y": 500,
+    "x": 480,
+    "y": 590,
     "wires": []
   },
   {
-    "id": "ui_disp_temp",
+    "id": "ui_disp_t",
     "type": "ui_text",
     "z": "bme280_tab",
     "group": "grp_meters",
     "order": 4,
-    "width": 4,
-    "height": 2,
+    "width": "8",
+    "height": "2",
     "name": "Temperature Display",
-    "label": "\ud83c\udf21\ufe0f Temperature:",
-    "format": "<span style='font-size:26px; font-weight:bold; color:#e11d48;'>{{msg.payload}}</span>",
+    "label": "\ud83c\udf21\ufe0f Temperature",
+    "format": "{{msg.payload}} \u00b0C",
     "layout": "row-spread",
     "className": "",
-    "x": 910,
-    "y": 540,
+    "x": 490,
+    "y": 640,
     "wires": []
   },
   {
-    "id": "ui_disp_hum",
+    "id": "ui_disp_h",
     "type": "ui_text",
     "z": "bme280_tab",
     "group": "grp_meters",
     "order": 5,
-    "width": 4,
-    "height": 2,
+    "width": "8",
+    "height": "2",
     "name": "Humidity Display",
-    "label": "\ud83d\udca7 Humidity:",
-    "format": "<span style='font-size:26px; font-weight:bold; color:#0284c7;'>{{msg.payload}}</span>",
+    "label": "\ud83d\udca7 Humidity",
+    "format": "{{msg.payload}} %RH",
     "layout": "row-spread",
     "className": "",
-    "x": 900,
-    "y": 580,
+    "x": 480,
+    "y": 690,
     "wires": []
   },
   {
-    "id": "ui_disp_pres",
+    "id": "ui_disp_p",
     "type": "ui_text",
     "z": "bme280_tab",
     "group": "grp_meters",
     "order": 6,
-    "width": 6,
-    "height": 2,
+    "width": "8",
+    "height": "2",
     "name": "Pressure Display",
-    "label": "\u23f1\ufe0f Pressure:",
-    "format": "<span style='font-size:26px; font-weight:bold; color:#d97706;'>{{msg.payload}}</span>",
+    "label": "\ud83e\udded Pressure",
+    "format": "{{msg.payload}} hPa",
     "layout": "row-spread",
     "className": "",
-    "x": 900,
-    "y": 620,
-    "wires": []
-  },
-  {
-    "id": "fn_store_bme",
-    "type": "function",
-    "z": "bme280_tab",
-    "name": "Store Sensor State for Cloud Delta",
-    "func": "let d = msg.payload;\nif (typeof d === \"string\") {\n    try { d = JSON.parse(d); } catch(e) { return null; }\n}\nif (d && d.temperature !== undefined) {\n    flow.set(\"sensor_data\", {\n        temperature: Number(d.temperature),\n        pressure: Number(d.pressure),\n        humidity: Number(d.humidity),\n        time: new Date().toLocaleTimeString()\n    });\n}\nreturn null;",
-    "outputs": 0,
-    "x": 510,
-    "y": 140,
-    "wires": []
-  },
-  {
-    "id": "inj_owm_poll",
-    "type": "inject",
-    "z": "bme280_tab",
-    "name": "Poll OpenWeatherMap API (5m)",
-    "props": [
-      {
-        "p": "city",
-        "v": "Chennai",
-        "vt": "str"
-      },
-      {
-        "p": "apiKey",
-        "v": "YOUR_OPENWEATHERMAP_API_KEY",
-        "vt": "str"
-      }
-    ],
-    "repeat": "300",
-    "crontab": "",
-    "once": true,
-    "onceDelay": 2,
-    "topic": "",
-    "x": 190,
-    "y": 700,
-    "wires": [
-      [
-        "fn_build_owm_req"
-      ]
-    ]
-  },
-  {
-    "id": "inj_owm_sim",
-    "type": "inject",
-    "z": "bme280_tab",
-    "name": "Simulate Live Cloud Weather (Chennai)",
-    "props": [
-      {
-        "p": "payload"
-      }
-    ],
-    "repeat": "",
-    "crontab": "",
-    "once": false,
-    "onceDelay": 0.1,
-    "topic": "",
-    "payload": "{\"name\": \"Chennai\", \"sys\": {\"country\": \"IN\"}, \"main\": {\"temp\": 29.8, \"feels_like\": 34.2, \"pressure\": 1011.0, \"humidity\": 72.0}, \"weather\": [{\"main\": \"Clouds\", \"description\": \"scattered clouds\", \"icon\": \"03d\"}], \"wind\": {\"speed\": 4.1}}",
-    "payloadType": "json",
-    "x": 220,
-    "y": 760,
-    "wires": [
-      [
-        "fn_parse_owm"
-      ]
-    ]
-  },
-  {
-    "id": "fn_build_owm_req",
-    "type": "function",
-    "z": "bme280_tab",
-    "name": "Format OpenWeatherMap URL",
-    "func": "const city = msg.city || \"Chennai\";\nconst key = msg.apiKey || \"YOUR_OPENWEATHERMAP_API_KEY\";\n\n// Set URL to OpenWeatherMap 2.5 REST API with metric units\nmsg.url = \"https://api.openweathermap.org/data/2.5/weather?q=\" + encodeURIComponent(city) + \"&appid=\" + encodeURIComponent(key) + \"&units=metric\";\nmsg.method = \"GET\";\nreturn msg;",
-    "outputs": 1,
     "x": 480,
-    "y": 700,
-    "wires": [
-      [
-        "http_owm_req"
-      ]
-    ]
-  },
-  {
-    "id": "http_owm_req",
-    "type": "http request",
-    "z": "bme280_tab",
-    "name": "OpenWeatherMap API Request",
-    "method": "use",
-    "ret": "obj",
-    "paytoqs": "ignore",
-    "url": "",
-    "tls": "",
-    "persist": false,
-    "proxy": "",
-    "insecureHTTPParser": false,
-    "authType": "",
-    "senderr": false,
-    "headers": [],
-    "x": 750,
-    "y": 700,
-    "wires": [
-      [
-        "fn_parse_owm"
-      ]
-    ]
-  },
-  {
-    "id": "fn_parse_owm",
-    "type": "function",
-    "z": "bme280_tab",
-    "name": "OpenWeatherMap Analytics & Sensor Delta",
-    "func": "const owm = msg.payload;\n\n// Validate OpenWeatherMap response\nif (!owm || !owm.main) {\n    return [\n        { payload: \"\u26a0\ufe0f OpenWeatherMap API Key Pending / Rate Limited. Use the Simulation button to test!\" },\n        { payload: \"Awaiting valid API response...\" }\n    ];\n}\n\nconst cloud_temp = Number(owm.main.temp);\nconst cloud_pres = Number(owm.main.pressure);\nconst cloud_hum = Number(owm.main.humidity);\nconst city = owm.name + \", \" + (owm.sys ? owm.sys.country : \"\");\nconst desc = owm.weather && owm.weather[0] ? owm.weather[0].description : \"Clear\";\n\n// Retrieve latest real-time physical BME280 sensor values\nconst sensor = flow.get(\"sensor_data\") || {\n    temperature: 24.33,\n    pressure: 1012.47,\n    humidity: 64.75,\n    time: \"Latest\"\n};\n\n// Compute real-time microclimate delta (Local Sensor vs Cloud Truth)\nconst delta_temp = (sensor.temperature - cloud_temp).toFixed(2);\nconst delta_hum = (sensor.humidity - cloud_hum).toFixed(2);\nconst delta_pres = (sensor.pressure - cloud_pres).toFixed(2);\n\nconst signT = delta_temp >= 0 ? \"+\" : \"\";\nconst signH = delta_hum >= 0 ? \"+\" : \"\";\nconst signP = delta_pres >= 0 ? \"+\" : \"\";\n\nconst owm_summary = \"\ud83c\udf0d <b>\" + city + \" (Cloud):</b> \" + cloud_temp.toFixed(1) + \" \u00b0C | \" + cloud_hum.toFixed(1) + \" %RH | \" + cloud_pres.toFixed(1) + \" hPa (\" + desc + \")\";\n\nconst delta_card = \"<div style='font-family:monospace; line-height:1.7;'>\" +\n    \"\ud83d\udce1 <b>Local BME280 Sensor:</b> \" + sensor.temperature.toFixed(2) + \" \u00b0C, \" + sensor.humidity.toFixed(2) + \" %, \" + sensor.pressure.toFixed(2) + \" hPa<br/>\" +\n    \"\u2601\ufe0f <b>OpenWeatherMap Ground:</b> \" + cloud_temp.toFixed(2) + \" \u00b0C, \" + cloud_hum.toFixed(2) + \" %, \" + cloud_pres.toFixed(2) + \" hPa<br/>\" +\n    \"\u2696\ufe0f <b>Real-Time Calibration Delta:</b> \" +\n    \"<span style='color:\" + (Math.abs(delta_temp) > 3 ? \"#e11d48\" : \"#16a34a\") + \";'>\u0394T: \" + signT + delta_temp + \" \u00b0C</span> | \" +\n    \"<span style='color:\" + (Math.abs(delta_hum) > 10 ? \"#0284c7\" : \"#16a34a\") + \";'>\u0394H: \" + signH + delta_hum + \" %</span> | \" +\n    \"<span style='color:#d97706;'>\u0394P: \" + signP + delta_pres + \" hPa</span>\" +\n    \"</div>\";\n\nreturn [\n    { payload: owm_summary },\n    { payload: delta_card }\n];",
-    "outputs": 2,
-    "x": 680,
-    "y": 760,
-    "wires": [
-      [
-        "ui_owm_summary"
-      ],
-      [
-        "ui_owm_delta"
-      ]
-    ]
-  },
-  {
-    "id": "ui_owm_summary",
-    "type": "ui_text",
-    "z": "bme280_tab",
-    "group": "grp_openweather",
-    "order": 1,
-    "width": 14,
-    "height": 1,
-    "name": "OpenWeatherMap Cloud Status",
-    "label": "Live Regional Weather (OpenWeatherMap API):",
-    "format": "{{msg.payload}}",
-    "layout": "row-spread",
-    "className": "",
-    "x": 1020,
     "y": 740,
-    "wires": []
-  },
-  {
-    "id": "ui_owm_delta",
-    "type": "ui_text",
-    "z": "bme280_tab",
-    "group": "grp_openweather",
-    "order": 2,
-    "width": 14,
-    "height": 2,
-    "name": "Real-Time Sensor Calibration Delta",
-    "label": "Sensor Calibration & Microclimate Delta Analysis:",
-    "format": "{{msg.payload}}",
-    "layout": "row-spread",
-    "className": "",
-    "x": 1040,
-    "y": 780,
     "wires": []
   }
 ]
