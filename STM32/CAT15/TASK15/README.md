@@ -62,9 +62,9 @@ The node evaluates ambient temperature $T$ (°C):
 
 ---
 
-## 5. Node-RED Flow & Dashboard Architecture
+## 5. Node-RED Flow Architecture
 
-The Node-RED flow is provided in [node_red_flow.json](node_red_flow.json).
+The complete Node-RED flow configuration is provided in [node_red_flow.json](node_red_flow.json).
 
 ```text
                                               ┌──> Regional Climate Prediction (UI Text)
@@ -82,12 +82,12 @@ The Node-RED flow is provided in [node_red_flow.json](node_red_flow.json).
                                               └──> Pressure Display (UI Text Display)
 ```
 
-### Dashboard Tabs & Groups
+### Dashboard Tabs & Groups Specifications
 1. **Dynamic Climate & Altitude Predictions**:
-   - `Regional Climate Synthesis`: Holistic environmental state assessment.
-   - `Dynamic Thermal Condition`: Real-time temperature status relative to 24°C–26°C comfort band.
-   - `Altitude Classification`: Lowland, Plateau, or Mountain Hill Station categorization.
-   - `Moisture Level`: Dry, Comfortable, or Humid state.
+   - Regional Climate Synthesis: Holistic environmental state assessment.
+   - Dynamic Thermal Condition: Real-time temperature status relative to 24°C–26°C comfort band.
+   - Altitude Classification: Lowland, Plateau, or Mountain Hill Station categorization.
+   - Moisture Level: Dry, Comfortable, or Humid state.
 2. **Real-Time Environmental Charts**:
    - Real-time Temperature history line graph.
    - Real-time Humidity history line graph.
@@ -128,6 +128,22 @@ The Node-RED flow is provided in [node_red_flow.json](node_red_flow.json).
 
 ## 7. Node-Red Dashboard
 
+### A. Node-RED Flow Canvas & Wiring Diagram
+The flow canvas shows the BME280 Telemetry In MQTT subscriber node connected to the Raw Telemetry debug monitor and the 13-output Dynamic Analytics & Region Predictor function node, along with the four test inject nodes for simulating boundary conditions.
+
+![Node-RED Flow Canvas](dashboard_flow.jpg)
+
+### B. Dynamic Climate Predictions & Real-Time Environmental Charts
+The top dashboard cards display the regional climate prediction, dynamic thermal status (TOO COLD: 23.1 °C (-0.9°C below 24°C)), barometric altitude classification (Sea Level / Lowland (~-6 m)), and moisture level (Comfortable (64.7 %)). Below are real-time history charts plotting instantaneous temperature, humidity, and barometric pressure over time.
+
+![Dynamic Climate Predictions & Real-Time Environmental Charts](dashboard_predictions_charts.jpg)
+
+### C. Live Meters & Current Values
+The lower dashboard panel features analog gauges with threshold color bands and digital readouts displaying live temperature (24.33 °C), humidity (64.75 %RH), and barometric pressure (1012.47 hPa).
+
+![Live Meters & Current Values](dashboard_live_meters.png)
+
+---
 
 ## 8. Inference
 
